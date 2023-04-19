@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/kjellberg/mrsk/validate-with-json-schema/lib/mrsk/configuration/schema.yaml
+service: hal9000
+image: huksley/hal9000/main
+servers:
+  web:
+    hosts: 
+      - &host <%= ENV["APPHOST"] %>
+    labels:
+      traefik.http.routers.hal9000-web.rule: Host(`<%= ENV["APPHOSTNAME"] %>"]`)
+      traefik.http.routers.hal9000-web-secure.entrypoints: websecure
+      traefik.http.routers.hal9000-web-secure.rule: Host(`<%= ENV["APPHOSTNAME"] %>`)
+      traefik.http.routers.hal9000-web-secure.tls: true
+      traefik.http.routers.hal9000-web-secure.tls.certresolver: letsencrypt
+      traefik.http.services.hal9000-web.loadbalancer.healthcheck.interval: 30s
+      traefik.http.middlewares.hal9000-web-retry.retry.attempts: 10
+      traefik.http.middlewares.hal9000-web-retry.retry.initialinterval: 2s
+registry:
+  server: ghcr.io
+  username: huksley
+  password:
+    - GHCR_TOKEN
+healthcheck:
+  path: /api/health
+env:
+  secret:
+    - SLACK_URL
+    - OPENAI_API_KEY
+ssh:
+  user: ec2-user
+traefik:
+  options:
+    publish:
+      # Do not add 80:80, as it added by default
+      - "443:443"
+    volume:
+      - "/tmp/acme.json:/tmp/acme.json"
+  args:
+    entryPoints.web.address: ":80"
+    entryPoints.websecure.address: ":443"
+    entryPoints.web.http.redirections.entrypoint.to: websecure
+    entryPoints.web.http.redirections.entrypoint.scheme: https
+    certificatesResolvers.letsencrypt.acme.email: "<%= ENV["EMAIL"] %>"
+    certificatesResolvers.letsencrypt.acme.storage: "/tmp/acme.json"
+    certificatesResolvers.letsencrypt.acme.httpchallenge: true
+    certificatesResolvers.letsencrypt.acme.httpchallenge.entrypoint: web
+  memory: 512m
+
