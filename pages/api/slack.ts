@@ -9,7 +9,7 @@ const openai = new OpenAIApi(configuration);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const body =
-    typeof req.body === "string"
+    typeof req.body === "string" && req.body?.startsWith("{")
       ? JSON.parse(req.body)
       : req.headers["content-type"] === "application/x-www-form-urlencoded"
       ? Object.fromEntries(new URLSearchParams(req.body))
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .then((response) => {
         const url = response.data.data[0].url;
         console.info("Got OpenAI response", response.data);
-        return fetch(process.env.SLACK_URL!, {
+        return fetch(body.response_url ?? process.env.SLACK_URL!, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
