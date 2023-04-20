@@ -1,4 +1,5 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import { cacheImage } from "@/components/cacheFile";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
@@ -23,9 +24,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         n: 1,
         size: "512x512",
       })
-      .then((response) => {
+      .then(async (response) => {
         const url = response.data.data[0].url;
         console.info("Got OpenAI response", response.data);
+        if (!url) {
+          console.error("No image URL in response", response.data);
+          return;
+        }
+
+        const cachedUrl = await cacheImage(url, "openai/image");
         return fetch(body.response_url ?? process.env.SLACK_URL!, {
           method: "POST",
           headers: {
@@ -53,6 +60,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ],
           }),
         });
+      })
+      .catch((e) => {
+        console.error("OpenAI error", e);
       });
 
     return res.status(200).json({
