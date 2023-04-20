@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   text: "OpenAPI GPT-4 generated image",
                 },
                 block_id: "image4",
-                image_url: url,
+                image_url: cachedUrl,
                 alt_text: body.text,
               },
             ],
