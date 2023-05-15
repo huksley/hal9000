@@ -23,6 +23,7 @@ healthcheck:
   path: /api/health
 env:
   secret:
+    # Check .env-example for required variables
     - SLACK_URL
     - OPENAI_API_KEY
     - S3_BUCKET
@@ -30,6 +31,8 @@ env:
     - AWS_REGION
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
+    - GAPI_TOKEN
+    - GAPI_PROJECT_ID
 ssh:
   user: ec2-user
 traefik:

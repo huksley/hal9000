@@ -89,32 +89,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // https://console.cloud.google.com/vertex-ai/generative/language/create/chat?project=
     const start = Date.now();
     const region = process.env.GAPI_REGION ?? "us-central1";
-    const model = process.env.GAPI_MODEL ?? "chat-bison@001";
+    const model = process.env.GAPI_MODEL ?? "chat-bison";
     const projectId = process.env.GAPI_PROJECT_ID;
     const reply = slackResponse(res, body, "Asking Google Vertex API " + model, process.env.SLACK_URL);
+    console.info("process.env.GAPI_TOKEN", process.env.GAPI_TOKEN);
+    /**
+     * https://news.ycombinator.com/item?id=35939931#35947333
+     */
     fetch(
-      `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/${model}:predict`,
+      `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:predict`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + process.env.GAPI_TOKEN,
-          body: JSON.stringify({
-            instances: [
-              {
-                context: "",
-                examples: [],
-                messages: [],
-              },
-            ],
-            parameters: {
-              temperature: 0.2,
-              maxOutputTokens: 256,
-              topP: 0.8,
-              topK: 40,
-            },
-          }),
         },
+        body: JSON.stringify({
+          instances: [
+            {
+              context: "You are my personal assistant.",
+              examples: [],
+              messages: [{ author: "user", content: body.text }],
+            },
+          ],
+          parameters: {
+            temperature: 0.2,
+            maxOutputTokens: 256,
+            topP: 0.8,
+            topK: 40,
+          },
+        }),
       }
     )
       .then(okstatus)
