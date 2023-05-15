@@ -9,8 +9,6 @@ export const slackResponse = (
   initialMessage?: SlackReply,
   defaultUrl?: string
 ) => {
-  const url = command.response_url ?? defaultUrl;
-
   console.info("Sending initial response", initialMessage);
   res.status(200).json({
     blocks: Array.isArray(initialMessage)
@@ -27,11 +25,13 @@ export const slackResponse = (
   });
 
   return (text?: SlackReply) => {
+    const url = command.response_url;
     if (!url) {
-      console.warn("No response_url or defaultUrl provided, not sending slack response", text);
-      return res;
+      console.warn("No response_url in command, not sending to backup channel", command);
+      return;
     }
 
+    // https://api.slack.com/interactivity/handling#message_responses
     return fetch(url, {
       method: "POST",
       headers: {
@@ -43,6 +43,17 @@ export const slackResponse = (
         blocks: Array.isArray(initialMessage)
           ? initialMessage
           : [
+              ...(initialMessage
+                ? [
+                    {
+                      type: "section",
+                      text: {
+                        type: "mrkdwn",
+                        text: "> " + initialMessage,
+                      },
+                    },
+                  ]
+                : []),
               {
                 type: "section",
                 text: {

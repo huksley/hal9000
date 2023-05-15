@@ -75,7 +75,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           { role: "system", content: "You are a helpful assistant." },
           { role: "user", content: "Current date: " + new Date().toISOString() },
           { role: "user", content: body.text },
-          { role: "user", content: "Write response in a slack markdown format." },
         ] satisfies ChatCompletionRequestMessage[],
       })
       .then((response) => {
