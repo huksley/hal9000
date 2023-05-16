@@ -18,6 +18,9 @@ export default function Home() {
         <span className="relative text-xl">
           Connects Slack commands to large language models, ChatGPT or GPT-4 and Google Vertex AI chat-bard.
         </span>
+        <span className="relative text-xl">
+          <a href="https://github.com/huksley/hal9000">https://github.com/huksley/hal9000</a>
+        </span>
       </div>
     </main>
   );

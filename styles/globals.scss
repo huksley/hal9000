@@ -26,20 +26,13 @@ body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
   background: #0d0f23;
-  padding: 2em;
+}
 
-  /* Color cast */
-  &::before {
-    background: #0d0f23;
-    content: "";
-    mix-blend-mode: color-dodge;
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 10000;
-  }
+a:hover,
+a:visited:hover {
+  color: #d9dee5;
+  text-decoration: underline;
+  underline-offset: 0.2em;
 }
 
 /* Basic setup */
