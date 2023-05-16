@@ -91,11 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const region = process.env.GAPI_REGION ?? "us-central1";
     const model = process.env.GAPI_MODEL ?? "chat-bison";
     const projectId = process.env.GAPI_PROJECT_ID;
-    const reply = slackResponse(res, body, "Asking Google Vertex API " + model, process.env.SLACK_URL);
-    console.info("process.env.GAPI_TOKEN", process.env.GAPI_TOKEN);
-    /**
-     * https://news.ycombinator.com/item?id=35939931#35947333
-     */
+    const reply = slackResponse(res, body, "Asking Google Vertex API " + model);
     fetch(
       `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:predict`,
       {
@@ -122,11 +118,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     )
       .then(okstatus)
+      .then((response) => response.json())
       .then((response) => {
         console.info(
           "Got Google response in " + Math.round((Date.now() - start) / 1000) + "s",
           JSON.stringify(response, null, 2)
         );
+
+        const text = response.predictions[0].candidates[0].content;
+        console.info("Sending reply", text);
+        reply(text);
       });
   } else {
     console.log("Unknown command", typeof body.text, "'" + body.command + "'");
