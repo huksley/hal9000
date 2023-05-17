@@ -18,7 +18,6 @@ Generates text from a given prompt. Uses gpt-3.5-turbo or any model you have in 
 
 Generates text from a given prompt. Uses gpt-4 model.
 
-`/palm => /api/slack`
+`/bard => /api/slack`
 
-Generates text using [Vertex AI](https://cloud.google.com/vertex-ai) and [chat-bison PaLM model](https://cloud.google.com/vertex-ai/docs/generative-ai/learn/models)
-
+Generates text using [Vertex AI](https://cloud.google.com/vertex-ai) and [chat-bison model i.e. Bard](https://cloud.google.com/vertex-ai/docs/generative-ai/learn/models)
