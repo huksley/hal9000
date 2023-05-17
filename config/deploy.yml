@@ -11,7 +11,7 @@ servers:
       traefik.http.routers.hal9000-web-secure.rule: Host(`<%= ENV["APPHOSTNAME"] %>`)
       traefik.http.routers.hal9000-web-secure.tls: true
       traefik.http.routers.hal9000-web-secure.tls.certresolver: letsencrypt
-      traefik.http.services.hal9000-web.loadbalancer.healthcheck.interval: 30s
+      traefik.http.services.hal9000-web.loadbalancer.healthcheck.interval: 5s
       traefik.http.middlewares.hal9000-web-retry.retry.attempts: 10
       traefik.http.middlewares.hal9000-web-retry.retry.initialinterval: 2s
 registry:
@@ -31,7 +31,8 @@ env:
     - AWS_REGION
     - AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY
-    - GAPI_TOKEN
+    - GAPI_SERVICE_ACCOUNT_EMAIL
+    - GAPI_SERVICE_ACCOUNT_KEY
     - GAPI_PROJECT_ID
 ssh:
   user: ec2-user

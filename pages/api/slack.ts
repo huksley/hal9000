@@ -4,10 +4,13 @@ import { cacheImage } from "@/components/cacheFile";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import { okstatus } from "@/components/okstatus";
+import { makeGaxiosClient } from "@/components/makeGaxiosClient";
+const slackifyMarkdown = require("slackify-markdown");
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
 const openai = new OpenAIApi(configuration);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -85,50 +88,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const text = response?.data?.choices[0]?.message?.content;
         reply(text);
       });
-  } else if (body?.text && body?.command === "/palm") {
+  } else if (body?.text && body?.command === "/bard") {
     // https://console.cloud.google.com/vertex-ai/generative/language/create/chat?project=
     const start = Date.now();
     const region = process.env.GAPI_REGION ?? "us-central1";
     const model = process.env.GAPI_MODEL ?? "chat-bison";
     const projectId = process.env.GAPI_PROJECT_ID;
-    const reply = slackResponse(res, body, "Asking Google Vertex API " + model);
-    fetch(
-      `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:predict`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + process.env.GAPI_TOKEN,
-        },
-        body: JSON.stringify({
-          instances: [
-            {
-              context: "You are my personal assistant.",
-              examples: [],
-              messages: [{ author: "user", content: body.text }],
-            },
-          ],
-          parameters: {
-            temperature: 0.2,
-            maxOutputTokens: 256,
-            topP: 0.8,
-            topK: 40,
+    const email = process.env.GAPI_SERVICE_ACCOUNT_EMAIL;
+    const key = process.env.GAPI_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n");
+    if (email && key && projectId) {
+      const reply = slackResponse(res, body, "Asking Google Vertex API " + model);
+      const client = makeGaxiosClient(email, key);
+      client
+        .request({
+          url: `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}/publishers/google/models/${model}:predict`,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }),
-      }
-    )
-      .then(okstatus)
-      .then((response) => response.json())
-      .then((response) => {
-        console.info(
-          "Got Google response in " + Math.round((Date.now() - start) / 1000) + "s",
-          JSON.stringify(response, null, 2)
-        );
 
-        const text = response.predictions[0].candidates[0].content;
-        console.info("Sending reply", text);
-        reply(text);
-      });
+          body: JSON.stringify({
+            instances: [
+              {
+                context: "You are my personal assistant.",
+                examples: [],
+                messages: [{ author: "user", content: body.text }],
+              },
+            ],
+            parameters: {
+              temperature: 0.2,
+              maxOutputTokens: 2048,
+              topP: 0.8,
+              topK: 40,
+            },
+          }),
+        })
+        .then((r) => {
+          const response = r.data as any;
+          console.info(
+            "Got Google response in " + Math.round((Date.now() - start) / 1000) + "s",
+            JSON.stringify(response, null, 2)
+          );
+
+          const text = slackifyMarkdown(response.predictions[0].candidates[0].content);
+          console.info("Sending reply", text);
+          reply(text);
+        });
+    } else {
+      slackResponse(res, body, "Missing GAPI credentials");
+    }
   } else {
     console.log("Unknown command", typeof body.text, "'" + body.command + "'");
 
