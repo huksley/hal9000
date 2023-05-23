@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const email = process.env.GAPI_SERVICE_ACCOUNT_EMAIL;
     const key = process.env.GAPI_SERVICE_ACCOUNT_KEY?.replace(/\\n/g, "\n");
     if (email && key && projectId) {
-      const reply = slackResponse(res, body, "Asking Google Vertex API " + model);
+      const reply = slackResponse(res, body, "Asking Google Vertex API " + model + ' "' + body.text + '"');
       const client = makeGaxiosClient(email, key);
       client
         .request({
@@ -117,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             ],
             parameters: {
               temperature: 0.2,
-              maxOutputTokens: 2048,
+              maxOutputTokens: 1024,
               topP: 0.8,
               topK: 40,
             },

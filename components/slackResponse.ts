@@ -40,8 +40,8 @@ export const slackResponse = (
       body: JSON.stringify({
         response_type: "in_channel",
         replace_original: true,
-        blocks: Array.isArray(initialMessage)
-          ? initialMessage
+        blocks: Array.isArray(text)
+          ? text
           : [
               ...(initialMessage
                 ? [
